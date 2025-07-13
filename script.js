@@ -286,37 +286,56 @@ const cursos = [
   }
 ];
 
-const estadoCursos = {};
+const estadoCursos = {}
 
 function renderMalla() {
     const container = document.querySelector(".malla");
     container.innerHTML = "";
 
-    cursos.forEach(curso => {
-        const div = document.createElement("div");
-        div.className = "curso";
-        div.innerText = `${curso.nombre}\n(Ciclo ${curso.ciclo})`;
-        div.dataset.nombre = curso.nombre;
-        div.dataset.prereq = curso.prerequisito || "Sin prerrequisito";
+    const ciclos = [...new Set(cursos.map(c => c.ciclo))].sort((a, b) => a - b);
 
-        const prereq = curso.prerequisito;
-        if (!prereq || estadoCursos[prereq]) {
-            div.classList.add("activo");
-            div.style.cursor = "pointer";
-        }
+    ciclos.forEach(ciclo => {
+        const section = document.createElement("div");
+        section.className = "ciclo-section";
+        
+        const titulo = document.createElement("h2");
+        titulo.textContent = "Ciclo " + ciclo;
+        section.appendChild(titulo);
 
-        if (estadoCursos[curso.nombre]) {
-            div.classList.add("completado");
-        }
+        cursos
+            .filter(c => c.ciclo === ciclo)
+            .forEach(curso => {
+                const div = document.createElement("div");
+                div.className = "curso";
+                div.innerText = curso.nombre;
+                div.dataset.nombre = curso.nombre;
+                div.dataset.prereq = curso.prerequisito || "Sin prerrequisito";
 
-        div.addEventListener("click", () => {
-            if (div.classList.contains("activo")) {
-                estadoCursos[curso.nombre] = true;
-                renderMalla();
-            }
-        });
+                const prereq = curso.prerequisito;
+                if (!prereq || estadoCursos[prereq]) {
+                    div.classList.add("activo");
+                    div.style.cursor = "pointer";
+                }
 
-        container.appendChild(div);
+                if (estadoCursos[curso.nombre]) {
+                    div.classList.add("completado");
+                }
+
+                div.addEventListener("click", () => {
+                    if (div.classList.contains("activo")) {
+                        if (estadoCursos[curso.nombre]) {
+                            delete estadoCursos[curso.nombre];
+                        } else {
+                            estadoCursos[curso.nombre] = true;
+                        }
+                        renderMalla();
+                    }
+                });
+
+                section.appendChild(div);
+            });
+
+        container.appendChild(section);
     });
 }
 
