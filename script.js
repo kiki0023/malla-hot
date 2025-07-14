@@ -285,22 +285,31 @@ const cursos = [
     "prerequisito": null
   }
 ];
-let estadoCursos = {}, customNames = {}, audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-function playTone(freq) {
-  let osc = audioCtx.createOscillator();
-  osc.frequency.value = freq;
-  osc.connect(audioCtx.destination);
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.1);
-}
+let estadoCursos = JSON.parse(localStorage.getItem('estadoCursos') || '{}');
+let customNames = JSON.parse(localStorage.getItem('customNames') || '{}');, customNames = {}, audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
 function renderMalla() {
   const container = document.querySelector('.malla');
   container.innerHTML = '';
   const total = cursos.length;
   const done = Object.keys(estadoCursos).length;
+  
   document.querySelector('.progress').style.height = (done / total * 100) + '%';
+  if (!document.querySelector('.clear-button')) {
+    const btn = document.createElement('button');
+    btn.textContent = 'Limpiar todo';
+    btn.className = 'clear-button';
+    btn.onclick = () => {
+      if (confirm('¿Estás segura de que quieres borrar todo tu progreso?')) {
+        localStorage.clear();
+        estadoCursos = {};
+        customNames = {};
+        renderMalla();
+      }
+    };
+    document.body.insertBefore(btn, document.querySelector('.container'));
+  }
+
 
   const ciclos = [...new Set(cursos.map(c => c.ciclo))].sort((a,b) => a-b);
   ciclos.forEach(ciclo => {
@@ -327,9 +336,15 @@ function renderMalla() {
             if (text) customNames[curso.nombre] = text;
           } else delete customNames[curso.nombre];
         }
-        if (isDone) { delete estadoCursos[curso.nombre]; playTone(440); }
-        else { estadoCursos[curso.nombre] = true; playTone(880); }
-        renderMalla();
+        if (isDone) { delete estadoCursos[curso.nombre];  }
+        else { estadoCursos[curso.nombre] = true;  }
+        
+function saveData() {
+  localStorage.setItem('estadoCursos', JSON.stringify(estadoCursos));
+  localStorage.setItem('customNames', JSON.stringify(customNames));
+}
+saveData(); renderMalla();
+
       });
       section.appendChild(div);
     });
@@ -337,4 +352,9 @@ function renderMalla() {
   });
 }
 
-renderMalla();
+
+function saveData() {
+  localStorage.setItem('estadoCursos', JSON.stringify(estadoCursos));
+  localStorage.setItem('customNames', JSON.stringify(customNames));
+}
+saveData(); renderMalla();
