@@ -285,58 +285,56 @@ const cursos = [
     "prerequisito": null
   }
 ];
+let estadoCursos = {}, customNames = {}, audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-const estadoCursos = {}
+function playTone(freq) {
+  let osc = audioCtx.createOscillator();
+  osc.frequency.value = freq;
+  osc.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.1);
+}
 
 function renderMalla() {
-    const container = document.querySelector(".malla");
-    container.innerHTML = "";
+  const container = document.querySelector('.malla');
+  container.innerHTML = '';
+  const total = cursos.length;
+  const done = Object.keys(estadoCursos).length;
+  document.querySelector('.progress').style.height = (done / total * 100) + '%';
 
-    const ciclos = [...new Set(cursos.map(c => c.ciclo))].sort((a, b) => a - b);
-
-    ciclos.forEach(ciclo => {
-        const section = document.createElement("div");
-        section.className = "ciclo-section";
-        
-        const titulo = document.createElement("h2");
-        titulo.textContent = "Ciclo " + ciclo;
-        section.appendChild(titulo);
-
-        cursos
-            .filter(c => c.ciclo === ciclo)
-            .forEach(curso => {
-                const div = document.createElement("div");
-                div.className = "curso";
-                div.innerText = curso.nombre;
-                div.dataset.nombre = curso.nombre;
-                div.dataset.prereq = curso.prerequisito || "Sin prerrequisito";
-
-                const prereq = curso.prerequisito;
-                if (!prereq || estadoCursos[prereq]) {
-                    div.classList.add("activo");
-                    div.style.cursor = "pointer";
-                }
-
-                if (estadoCursos[curso.nombre]) {
-                    div.classList.add("completado");
-                }
-
-                div.addEventListener("click", () => {
-                    if (div.classList.contains("activo")) {
-                        if (estadoCursos[curso.nombre]) {
-                            delete estadoCursos[curso.nombre];
-                        } else {
-                            estadoCursos[curso.nombre] = true;
-                        }
-                        renderMalla();
-                    }
-                });
-
-                section.appendChild(div);
-            });
-
-        container.appendChild(section);
+  const ciclos = [...new Set(cursos.map(c => c.ciclo))].sort((a,b) => a-b);
+  ciclos.forEach(ciclo => {
+    let section = document.createElement('div');
+    section.className = 'ciclo-section';
+    let title = document.createElement('h2');
+    title.textContent = 'Ciclo ' + ciclo;
+    section.appendChild(title);
+    cursos.filter(c => c.ciclo === ciclo).forEach(curso => {
+      const div = document.createElement('div');
+      div.className = 'curso';
+      const name = customNames[curso.nombre] || curso.nombre;
+      div.innerText = name;
+      div.dataset.nombre = curso.nombre;
+      div.dataset.prereq = curso.prerequisito || 'Sin prerrequisito';
+      if (!curso.prerequisito || estadoCursos[curso.prerequisito]) div.classList.add('activo');
+      if (estadoCursos[curso.nombre]) div.classList.add('completado');
+      div.addEventListener('click', () => {
+        if (!div.classList.contains('activo')) return;
+        const isDone = estadoCursos[curso.nombre];
+        if (curso.nombre.startsWith('ELECTIVO')) {
+          if (!isDone) {
+            const text = prompt('¿Qué curso elegiste para ' + curso.nombre + '?', customNames[curso.nombre] || '');
+            if (text) customNames[curso.nombre] = text;
+          } else delete customNames[curso.nombre];
+        }
+        if (isDone) { delete estadoCursos[curso.nombre]; playTone(440); }
+        else { estadoCursos[curso.nombre] = true; playTone(880); }
+        renderMalla();
+      });
+      section.appendChild(div);
     });
+    container.appendChild(section);
+  });
 }
 
 renderMalla();
