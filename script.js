@@ -286,15 +286,20 @@ const cursos = [
   }
 ];
 let estadoCursos = JSON.parse(localStorage.getItem('estadoCursos') || '{}');
-let customNames = JSON.parse(localStorage.getItem('customNames') || '{}');, customNames = {}, audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+let customNames = JSON.parse(localStorage.getItem('customNames') || '{}');
+
+function saveData() {
+  localStorage.setItem('estadoCursos', JSON.stringify(estadoCursos));
+  localStorage.setItem('customNames', JSON.stringify(customNames));
+}
 
 function renderMalla() {
   const container = document.querySelector('.malla');
   container.innerHTML = '';
   const total = cursos.length;
   const done = Object.keys(estadoCursos).length;
-  
   document.querySelector('.progress').style.height = (done / total * 100) + '%';
+
   if (!document.querySelector('.clear-button')) {
     const btn = document.createElement('button');
     btn.textContent = 'Limpiar todo';
@@ -309,7 +314,6 @@ function renderMalla() {
     };
     document.body.insertBefore(btn, document.querySelector('.container'));
   }
-
 
   const ciclos = [...new Set(cursos.map(c => c.ciclo))].sort((a,b) => a-b);
   ciclos.forEach(ciclo => {
@@ -336,15 +340,10 @@ function renderMalla() {
             if (text) customNames[curso.nombre] = text;
           } else delete customNames[curso.nombre];
         }
-        if (isDone) { delete estadoCursos[curso.nombre];  }
-        else { estadoCursos[curso.nombre] = true;  }
-        
-function saveData() {
-  localStorage.setItem('estadoCursos', JSON.stringify(estadoCursos));
-  localStorage.setItem('customNames', JSON.stringify(customNames));
-}
-saveData(); renderMalla();
-
+        if (isDone) { delete estadoCursos[curso.nombre]; }
+        else { estadoCursos[curso.nombre] = true; }
+        saveData();
+        renderMalla();
       });
       section.appendChild(div);
     });
@@ -352,9 +351,4 @@ saveData(); renderMalla();
   });
 }
 
-
-function saveData() {
-  localStorage.setItem('estadoCursos', JSON.stringify(estadoCursos));
-  localStorage.setItem('customNames', JSON.stringify(customNames));
-}
-saveData(); renderMalla();
+renderMalla();
