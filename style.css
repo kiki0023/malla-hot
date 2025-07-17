@@ -15,7 +15,7 @@ h1 {
     gap: 20px;
 }
 .progress-bar {
-    width: 10px;
+    width: 12px;
     background-color: #ffe0ec;
     border-radius: 5px;
     height: calc(100vh - 100px);
